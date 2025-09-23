@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  mcp-memos-server:
+    build: .
+    container_name: mcp-memos-server
+    environment:
+      - MEMOS_URL=${MEMOS_URL}
+      - MEMOS_API_KEY=${MEMOS_API_KEY}
+      - DEFAULT_VISIBILITY=${DEFAULT_VISIBILITY:-PRIVATE}
+      - MAX_SEARCH_RESULTS=${MAX_SEARCH_RESULTS:-50}
+      - TIMEOUT=${TIMEOUT:-30}
+    volumes:
+      # Mount configuration if you want to use a local .env file
+      - ./.env:/app/.env:ro
+    ports:
+      # Uncomment if you want to use HTTP transport
+      # - "8080:8080"
+    restart: unless-stopped
+    
+    # Uncomment to use stdio transport with a client
+    # stdin_open: true
+    # tty: true
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "python", "-c", "from config import validate_config; exit(0 if validate_config() else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Example: If you want to run alongside a local Memos instance
+  # memos:
+  #   image: neosmemo/memos:latest
+  #   container_name: memos
+  #   ports:
+  #     - "5230:5230"
+  #   volumes:
+  #     - memos_data:/var/opt/memos
+  #   environment:
+  #     - MEMOS_MODE=prod
+  #   restart: unless-stopped
+
+# volumes:
+#   memos_data:
