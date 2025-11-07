@@ -103,6 +103,7 @@ A Model Context Protocol (MCP) server that provides AI agents with access to you
 | `DEFAULT_VISIBILITY` | `PRIVATE` | Default visibility for new memos (`PRIVATE`, `PROTECTED`, `PUBLIC`) |
 | `MAX_SEARCH_RESULTS` | `50` | Maximum number of search results to return |
 | `TIMEOUT` | `30` | HTTP request timeout in seconds |
+| `VERIFY_SSL` | `true` | Verify SSL certificates (set to `false` for self-signed certificates) |
 
 ### Getting Your Memos API Key
 
@@ -306,6 +307,12 @@ Resources provide read-only access to your memo data:
 - Verify `MEMOS_URL` is correct (no trailing slash)
 - Check that your API key is valid and has proper permissions
 - Ensure your Memos server is accessible from the MCP server
+
+### SSL Certificate Errors
+If you see `CERTIFICATE_VERIFY_FAILED` errors:
+- For self-hosted servers with self-signed certificates, set `VERIFY_SSL=false`
+- For production use, it's recommended to use valid SSL certificates
+- Example: `export VERIFY_SSL=false` or add to your `.env` file
 
 ### Docker Issues
 - Check logs: `docker-compose logs mcp-memos-server`
