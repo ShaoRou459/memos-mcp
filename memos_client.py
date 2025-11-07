@@ -200,3 +200,39 @@ class MemosClient:
         """Get recent memos."""
         response = await self.list_memos(limit=limit)
         return response.get("memos", [])
+
+    async def get_memos_paginated(
+        self,
+        page_size: int = 20,
+        page_token: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Get memos with pagination support, sorted chronologically.
+
+        Args:
+            page_size: Number of memos to return per page
+            page_token: Token for pagination (from previous response)
+
+        Returns:
+            Dict containing:
+                - memos: List of memo objects
+                - nextPageToken: Token for next page (if available)
+        """
+        response = await self.list_memos(limit=page_size, offset=page_token)
+
+        # Extract memos and sort them by creation time (oldest first for chronological iteration)
+        memos = response.get("memos", [])
+
+        # Sort by createTime
+        sorted_memos = sorted(
+            memos,
+            key=lambda m: parse_date(m.get("createTime", "1970-01-01T00:00:00Z"))
+        )
+
+        # Get next page token from response
+        next_token = response.get("nextPageToken")
+
+        return {
+            "memos": sorted_memos,
+            "nextPageToken": next_token,
+            "totalCount": len(sorted_memos)
+        }

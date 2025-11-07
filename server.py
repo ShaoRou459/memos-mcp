@@ -335,7 +335,7 @@ async def get_memos_by_date_range(
 @mcp.tool()
 async def list_recent_memos(limit: Optional[int] = 10) -> str:
     """Get the most recent memos.
-    
+
     Args:
         limit: Number of recent memos to return (default: 10)
     """
@@ -343,23 +343,77 @@ async def list_recent_memos(limit: Optional[int] = 10) -> str:
     api_key_error = check_api_key_set()
     if api_key_error:
         return api_key_error
-    
+
     try:
         async with await get_client() as client:
             memos = await client.get_recent_memos(limit or 10)
-            
+
             if not memos:
                 return "📝 No memos found"
-            
+
             result = [f"📝 {len(memos)} most recent memo(s):\n"]
             for memo in memos:
                 result.append(format_memo_for_display(memo))
-            
+
             return "\n".join(result)
     except MemosAPIError as e:
         return f"❌ Failed to get recent memos: {e}"
     except Exception as e:
         return f"❌ Error getting recent memos: {e}"
+
+
+@mcp.tool()
+async def iterate_memos_chronologically(
+    page_size: Optional[int] = 20,
+    page_token: Optional[str] = None
+) -> str:
+    """Iterate through all memos in chronological order (by date added/created).
+
+    This tool supports pagination, allowing you to iterate through all memos
+    systematically. Memos are sorted from oldest to newest by creation time.
+
+    Args:
+        page_size: Number of memos to return per page (default: 20, max: 100)
+        page_token: Token from previous response to get next page (optional)
+    """
+    # Check if API key is configured
+    api_key_error = check_api_key_set()
+    if api_key_error:
+        return api_key_error
+
+    # Validate page size
+    if page_size and page_size > 100:
+        page_size = 100
+
+    try:
+        async with await get_client() as client:
+            response = await client.get_memos_paginated(
+                page_size=page_size or 20,
+                page_token=page_token
+            )
+
+            memos = response.get("memos", [])
+            next_token = response.get("nextPageToken")
+
+            if not memos:
+                return "📝 No more memos found"
+
+            result = [f"📅 Showing {len(memos)} memo(s) in chronological order:\n"]
+
+            for memo in memos:
+                result.append(format_memo_for_display(memo))
+
+            # Add pagination info
+            if next_token:
+                result.append(f"\n📄 More memos available. Use page_token='{next_token}' to get the next page.")
+            else:
+                result.append("\n✅ End of memos reached.")
+
+            return "\n".join(result)
+    except MemosAPIError as e:
+        return f"❌ Failed to iterate memos: {e}"
+    except Exception as e:
+        return f"❌ Error iterating memos: {e}"
 
 
 # RESOURCES (Data that can be read)

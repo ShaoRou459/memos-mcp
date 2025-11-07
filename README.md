@@ -14,6 +14,7 @@ A Model Context Protocol (MCP) server that provides AI agents with access to you
 - **get_memos_by_date** - Find memos created on specific dates
 - **get_memos_by_date_range** - Get memos within date ranges
 - **list_recent_memos** - Access your most recent memos
+- **iterate_memos_chronologically** - Iterate through all memos in chronological order with pagination support
 
 ### 📚 Resources (Data Access)
 - `memo://recent` - Access recent memos
@@ -208,6 +209,23 @@ Args: {
 }
 ```
 
+### Iterating Through All Memos Chronologically
+```
+AI: I want to go through all your memos from oldest to newest
+Tool: iterate_memos_chronologically
+Args: {
+  "page_size": 20
+}
+Response: Shows 20 oldest memos with a page_token for the next batch
+
+AI: Get the next batch of memos
+Tool: iterate_memos_chronologically
+Args: {
+  "page_size": 20,
+  "page_token": "token_from_previous_response"
+}
+```
+
 ### Accessing Resources
 ```
 AI: Let me check your recent memos
@@ -258,6 +276,20 @@ Gets memos created on a specific date.
 - `limit` (integer, optional): Max results (default: 20)
 
 **Returns:** List of memos from that date
+
+#### `iterate_memos_chronologically`
+Iterates through all memos in chronological order (by creation date) with pagination support.
+
+**Parameters:**
+- `page_size` (integer, optional): Number of memos per page (default: 20, max: 100)
+- `page_token` (string, optional): Token from previous response to get next page
+
+**Returns:**
+- List of memos sorted from oldest to newest
+- `nextPageToken` for retrieving the next batch (if available)
+- Pagination status indicating if more memos are available
+
+**Use case:** When you need to systematically process all memos in the order they were created, useful for migrations, analysis, or complete reviews.
 
 ### Resources
 

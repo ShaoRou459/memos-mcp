@@ -136,15 +136,15 @@ async def test_memos_client():
 async def test_search_functionality():
     """Test search and filtering functionality."""
     test = TestRunner()
-    
+
     print("\nTesting Search Functionality...")
-    
+
     if not validate_config():
         test.skip("All search tests", "Configuration not valid")
         return test
-    
+
     config = get_config()
-    
+
     try:
         async with MemosClient(config) as client:
             # Test search (even if no results)
@@ -154,7 +154,7 @@ async def test_search_functionality():
                 test.test("Search returns list", isinstance(results, list))
             except Exception as e:
                 test.test("Search execution", False, str(e))
-            
+
             # Test date filtering
             try:
                 today = date.today()
@@ -163,7 +163,7 @@ async def test_search_functionality():
                 test.test("Date filtering returns list", isinstance(results, list))
             except Exception as e:
                 test.test("Date filtering execution", False, str(e))
-            
+
             # Test recent memos
             try:
                 results = await client.get_recent_memos(limit=5)
@@ -171,10 +171,30 @@ async def test_search_functionality():
                 test.test("Recent memos returns list", isinstance(results, list))
             except Exception as e:
                 test.test("Recent memos execution", False, str(e))
-    
+
+            # Test chronological pagination
+            try:
+                response = await client.get_memos_paginated(page_size=5)
+                test.test("Paginated iteration execution", True)
+                test.test("Pagination response has memos", "memos" in response)
+                test.test("Pagination response has totalCount", "totalCount" in response)
+                test.test("Pagination memos is list", isinstance(response.get("memos", []), list))
+
+                # Test that memos are sorted chronologically
+                memos = response.get("memos", [])
+                if len(memos) > 1:
+                    from dateutil.parser import parse as parse_date
+                    times = [parse_date(m.get("createTime", "1970-01-01T00:00:00Z")) for m in memos]
+                    is_sorted = all(times[i] <= times[i+1] for i in range(len(times)-1))
+                    test.test("Memos sorted chronologically", is_sorted)
+                else:
+                    test.skip("Chronological sorting test", "Not enough memos to verify sorting")
+            except Exception as e:
+                test.test("Paginated iteration execution", False, str(e))
+
     except Exception as e:
         test.skip("All search tests", f"Client error: {e}")
-    
+
     return test
 
 
