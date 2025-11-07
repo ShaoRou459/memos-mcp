@@ -22,17 +22,18 @@ class MemosClient:
         # Use provided API key or fall back to config
         self.api_key = api_key or config.memos_api_key
         self.timeout = config.timeout
-        
+
         if not self.api_key:
             raise ValueError("API key must be provided either in config or as parameter")
-        
+
         # Set up HTTP client
         self.client = httpx.AsyncClient(
             timeout=self.timeout,
             headers={
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json"
-            }
+            },
+            verify=config.verify_ssl
         )
     
     async def __aenter__(self):

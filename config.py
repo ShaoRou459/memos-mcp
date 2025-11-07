@@ -30,10 +30,14 @@ class MemosConfig(BaseSettings):
         description="Maximum number of search results to return"
     )
     timeout: int = Field(
-        default=30, 
+        default=30,
         description="HTTP request timeout in seconds"
     )
-    
+    verify_ssl: bool = Field(
+        default=True,
+        description="Verify SSL certificates (set to False for self-signed certificates)"
+    )
+
     model_config = {
         "env_file": ".env",
         "env_prefix": "",
